@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
-import pandas as pd
+from functools import partial
 import json
 import re
+import pandas as pd
 
 def annotation_json2html(txt, anns,
                    start = 'start',
@@ -82,6 +83,19 @@ f'''<body>
 </body>''')
     return out
 
+
+def modify_column_names(x,
+                        columns={'hof': 'hx'}):
+    """clean and substitute column names
+    Notes:
+        hof stands for `history of`, change to `hx`
+    """
+    if x in columns:
+        return columns[x]
+    else:
+        return x.replace('_', ' ')
+
+
 if __name__ == '__main__':
     import argparse
     import os
@@ -113,8 +127,9 @@ if __name__ == '__main__':
         results = json.load(fh)
 
     concepts = concat_concepts(results)
-    html_ = annotation_json2html(txt, concepts, start='offset_start', end='offset_end',
-                        label='canon_text')
+    html_ = annotation_json2html(txt, concepts, start='offset_start',
+                                 end='offset_end',
+                                 label='canon_text')
 
     #html_ = '<br/>' + html_
     COL_ORDER=['canon_text',
@@ -137,19 +152,22 @@ if __name__ == '__main__':
         pd.set_option('display.max_rows', len(concepts)+1)
         concepts_df = pd.DataFrame(concepts)
         concepts_df = concepts_df[COL_ORDER]
-        concepts_df.loc[concepts_df['domain'] =='signs_and_symptoms', 'domain'] = 'symptoms'
-        def modify_column_names(x):
-            if x=='hof':
-                return 'past'
-            else:
-                return x.replace('_', ' ')
 
-        concepts_df.columns = concepts_df.columns.map(modify_column_names)
+        # rename 'signs_and_symptoms' to 'symptoms'
+        mask = concepts_df['domain'] =='signs_and_symptoms'
+        concepts_df.loc[mask, 'domain'] = 'symptoms'
+
+        concepts_df.columns = concepts_df.columns.map(partial(modify_column_names,
+                                                      columns={'hof': 'hx',
+                                                      'offset_end':'end',
+                                                      'offset_start':'start'}))
         
-        #concepts_df.drop('note_id', axis=1, inplace=True)
         concepts_df_str = concepts_df.applymap(str)
+
+        # blank out 'na' and 'f'/'False' values
         concepts_df_str[concepts_df.applymap(lambda x: (x=='na') or (x is None))] = ''
         concepts_df_str[concepts_df == False] = ''
+
         for col in ['negated','location','domain', 'past']:
             if col not in concepts_df_str:
                 continue
