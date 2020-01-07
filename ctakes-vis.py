@@ -13,6 +13,7 @@ def annotation_json2html(txt, anns,
     if isinstance(anns, (list, tuple)):
         anns = sorted(anns, key = lambda x: x[start])
     prev_end = 0
+    prev_start = 0
     html_ = ''
     for ii, ann in enumerate(anns):
         label_ = ann[label]
@@ -27,19 +28,27 @@ def annotation_json2html(txt, anns,
         if 'domain' in ann:
             domain = ann['domain'].replace(' ', '_')
 
-        if (ann[start]-prev_end)>0:
-            html_+= ('<span>' + txt[prev_end:ann[start]].replace('\n','<br/>\n') + '</span>')
-
-        if (ann[end]-prev_end)>0:
+        if (ann[start] > prev_end):
+            txt_span = txt[prev_end:ann[start]].replace('\n','<br/>\n')
+            html_+= '<span>' + txt_span + '</span>'
+            ### moved from prev
             prefix = ''
             word = txt[ann[start]:ann[end]]
-        else:
+        # overlapping cases
+        elif (ann[end] > prev_end):
             prefix = ' '
-            word = '&dagger;'
+            word = txt[prev_end:ann[end]]
+        else:
+            prefix = ''
+            word = '<sup>&dagger;</sup>'
         #onclick="deleteConcept(this)"
         html_+= (prefix 
-                 + f'<div class="ttooltip" id="entity_{ii}"><span class={domain}>{word}'
-                 + f'</span><span class="tooltiptext" id="tooltiptext_{ii}">{tip_text}</span></div>')
+                 + f'<div class="ttooltip" id="entity_{ii}">'
+                 + f'<span class={domain}>{word}'
+                 + f'</span><span class="tooltiptext" id="tooltiptext_{ii}">'
+                 + f'{tip_text}</span></div>')
+
+        prev_start = ann[start]
         prev_end = ann[end]
     return html_
 
