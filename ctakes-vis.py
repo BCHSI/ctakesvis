@@ -6,6 +6,16 @@ import json
 import re
 import pandas as pd
 
+def _rename_domain(x):
+    if x == 'signs_and_symptoms':
+        x = 'symptoms'
+    return x
+
+def rename_domain_inplace(x):
+    x['domain'] = _rename_domain(x['domain'])
+    return x
+
+
 def annotation_json2html(txt, anns,
                    start = 'start',
                    end = 'end',
@@ -45,8 +55,8 @@ def annotation_json2html(txt, anns,
         #onclick="deleteConcept(this)"
         html_+= (prefix 
                  + f'<div class="ttooltip" id="entity_{ii}">'
-                 + f'<span class={domain}>{word}'
-                 + f'</span><span class="tooltiptext" id="tooltiptext_{ii}">'
+                 + f'<span class={domain}>{word}</span>'
+                 + f'<span class="tooltiptext" id="tooltiptext_{ii}">'
                  + f'{tip_text}</span></div>')
 
         prev_start = ann[start]
@@ -124,9 +134,11 @@ if __name__ == '__main__':
         txt = fh.read()
 
     with open(fn_json) as fh:
-        results = json.load(fh)
+        concepts = json.load(fh)
 
-    concepts = concat_concepts(results)
+    concepts = concat_concepts(concepts)
+    concepts = [rename_domain_inplace(concept) for concept  in concepts]
+
     html_ = annotation_json2html(txt, concepts, start='offset_start',
                                  end='offset_end',
                                  label='canon_text')
@@ -153,10 +165,6 @@ if __name__ == '__main__':
         concepts_df = pd.DataFrame(concepts)
         concepts_df = concepts_df[COL_ORDER]
 
-        # rename 'signs_and_symptoms' to 'symptoms'
-        mask = concepts_df['domain'] =='signs_and_symptoms'
-        concepts_df.loc[mask, 'domain'] = 'symptoms'
-
         concepts_df.columns = concepts_df.columns.map(partial(modify_column_names,
                                                       columns={'hof': 'hx',
                                                       'offset_end':'end',
@@ -165,7 +173,8 @@ if __name__ == '__main__':
         concepts_df_str = concepts_df.applymap(str)
 
         # blank out 'na' and 'f'/'False' values
-        concepts_df_str[concepts_df.applymap(lambda x: (x=='na') or (x is None))] = ''
+        mask_na = concepts_df.applymap(lambda x: (x=='na') or (x is None))
+        concepts_df_str[mask_na] = ''
         concepts_df_str[concepts_df == False] = ''
 
         for col in ['negated','location','domain', 'past']:
@@ -176,6 +185,7 @@ if __name__ == '__main__':
         drop_cols = concepts_df_str.columns[(concepts_df_str == '').all(0)]
         concepts_df_str.drop(drop_cols, axis=1, inplace=True)
         concept_html = concepts_df_str._repr_html_()
+
         concept_html = re.sub(r'<tr>\n      <th>(\d+)</th>\n(\s+)<td>(.*)</td>',
                               r'<tr class="entity_row" id="row_\1">\n      '+
                               r'<th id="row_\1">\1</th>\n\2<td><a href="#entity_\1">\3</td>',

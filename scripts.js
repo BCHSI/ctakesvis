@@ -92,5 +92,48 @@ $(window).load(function(){
              $('div.body_scroll').eq(index).after('<div class="table_footer">'+ $targetDataTableFooter.text() +'</div>');
         }
     });
-}
+
+$(function(){
+  // assign class (->color) to all cells in the "domain" column
+  var columnindex = $('th:contains("domain")').index();
+  console.log('columnindex', columnindex);
+  if(columnindex != -1){
+       $('tr').each(function(){
+          // for some reason we have to take `columnindex-1`
+          var column = $('td', this).eq(columnindex-1);
+              console.log('column', column.text());
+              column.attr('class', column.text());
+      })
+  }
 });
+
+};
+
+
+const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
+
+const comparer = (idx, asc) => (a, b) => ((v1, v2) => 
+    v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2)
+    )(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
+
+// do the work...
+// see https://stackoverflow.com/questions/14267781/sorting-html-table-with-javascript
+document.querySelectorAll('th').forEach(th => th.addEventListener('click', (() => {
+    console.log('table click');
+    // const table = th.closest('table');
+    const table = $('.dataframe')[0];
+    const table_body = table.querySelectorAll('tr.entity_row')
+    // const table_body = $('.dataframe:first-child > tr.entity_row')
+    Array.from(
+        //table.querySelectorAll('tr:nth-child(n+2)'))
+        table_body)
+        .sort(comparer(Array.from(th.parentNode.children).indexOf(th), 
+                       this.asc = !this.asc
+                       ))
+        .forEach(tr => table.appendChild(tr) );
+})));
+
+});
+
+
+
