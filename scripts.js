@@ -1,3 +1,5 @@
+// import {fixedHeaderTable} from './jquery.fixedheadertable.min.js';
+
 function highlightConceptColor(elem) {
       elem.style.backgroundColor = '#DDDDDD';
       console.log(elem.id);
@@ -33,13 +35,18 @@ function highlightConceptEverywhere(){
     highlightConceptText(row_id);
 };
 
-function adjustColumnWidths(){
-    var $table_body_scroll=$('table'),
-        header_table=$( '<table aria-hidden="true" class="header_table"><thead><tr><td></td></tr></thead></table>' ),
+function fixHeader(){
+    var $table_body_scroll=$('table');
+    var header_table_exists=$('.header_table').length>0;
+    console.log('header_table_exists', header_table_exists);
+    var header_table=$('<table aria-hidden="true" class="header_table"><thead><tr><td></td></tr></thead></table>' ),
     scroll_div='<div class="body_scroll"></div>';
 
     //inject table that will hold stationary row header; inject the div that will get scrolled
-    $table_body_scroll.before( header_table ).before( scroll_div );
+    if (!header_table_exists){
+        console.log('adding a fixed-position header');
+        $table_body_scroll.before( header_table ).before( scroll_div );
+        }
 
     $table_body_scroll.each(function (index) {
         //to minimize FUOC, I like to set the relevant variables before manipulating the DOM
@@ -58,27 +65,27 @@ function adjustColumnWidths(){
          // columnWidths[index] = (100*$(this).width() / tableWidth).toString() + '%' ;
         });
 
-        //place target table inside of relevant scrollable div (using jQuery eq() and index)
+        // place target table inside of relevant scrollable div (using jQuery eq() and index)
         $('div.body_scroll').eq(index).prepend( $targetDataTable ).width( $($targetDataTable).width() );
 
         // hide original caption, header, and footer from sighted users
         $($targetDataTable).children('caption, thead, tfoot').hide();
 
         // insert header data into static table
-        $($targetHeaderTable).find('thead').replaceWith( $( $targetDataTable ).children('caption, thead').clone().show() );
+        $($targetHeaderTable).find('thead').replaceWith( 
+                                            $( $targetDataTable ).children('caption, thead').clone().show() 
+                                                       );
 
         // modify column width for header
         $($targetHeaderTable).find('thead tr th').each(function (index) {
             $(this).css('width', columnWidths[index]);
         });
-
         // make sure table data still lines up correctly
         $($targetDataTable).find('tbody tr td').each(function (index) {
             if (index>=0){
                 $(this).css('width', columnWidths[index+1]);
             };
         });
-
         //if our target table has a footer, create a visual copy of it after the scrollable div
         if ( $targetDataTableFooter.length ) {
              $('div.body_scroll').eq(index).after('<div class="table_footer">'+
@@ -94,21 +101,72 @@ function adjustColumnWidths(){
            $('tr').each(function(){
               // for some reason we have to take `columnindex-1`: th vs td
               var column = $('td', this).eq(columnindex-1);
-                  console.log('column', column.text());
-                  column.attr('class', column.text());
+                  // console.log('column', column.text());
+                  // column.attr('class', column.text());
           })
       }
     });
   }
 
+function scrolify(tblAsJQueryObject, height) {
+  var oTbl = tblAsJQueryObject;
+
+  // for very large tables you can remove the four lines below
+  // and wrap the table with <div> in the mark-up and assign
+  // height and overflow property  
+  var oTblDiv = $("<div/>");
+  oTblDiv.css('height', height);
+  oTblDiv.css('overflow', 'scroll');
+  oTbl.wrap(oTblDiv);
+
+  // save original width
+  oTbl.attr("data-item-original-width", oTbl.width());
+  oTbl.find('thead tr td').each(function() {
+    $(this).attr("data-item-original-width", $(this).width());
+  });
+  oTbl.find('tbody tr:eq(0) td').each(function() {
+    $(this).attr("data-item-original-width", $(this).width());
+  });
+
+
+  // clone the original table
+  var newTbl = oTbl.clone();
+
+  // remove table header from original table
+  oTbl.find('thead tr').remove();
+  // remove table body from new table
+  newTbl.find('tbody tr').remove();
+
+  oTbl.parent().parent().prepend(newTbl);
+  newTbl.wrap("<div/>");
+
+  // replace ORIGINAL COLUMN width				
+  newTbl.width(newTbl.attr('data-item-original-width'));
+  newTbl.find('thead tr td').each(function() {
+    $(this).width($(this).attr("data-item-original-width"));
+  });
+  oTbl.width(oTbl.attr('data-item-original-width'));
+  oTbl.find('tbody tr:eq(0) td').each(function() {
+    $(this).width($(this).attr("data-item-original-width"));
+  });
+}
+
 $(document).on('click', ".tooltiptext", highlightConceptEverywhere);
 // $(document).on('click', ".tooltiptext", changeColorTable);
 $(document).on('click', ".entity_row", highlightConceptEverywhere);
 
-//
-// $(document).ready(
+$(document).ready(function() {
+  if ( $('table').length ) {fixHeader();}
+  /*
+  $.getScript("./jquery.fixedheadertable.min.js" , function(fixedHeaderTable){
+    console.log('fixedHeaderTable', fixedHeaderTable);
+    if ( $('table').length ) {fixedHeaderTable($('table')[1]);}
+  })
+  */
+});
+
 $(window).load(function(){
-  if ( $('table').length ) adjustColumnWidths(); 
+  //if ( $('table').length ) {fixHeader();}
 
   const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
 
@@ -134,6 +192,3 @@ $(window).load(function(){
   })));
 
 });
-
-
-
