@@ -106,6 +106,54 @@ def modify_column_names(x,
         return x.replace('_', ' ')
 
 
+def produce_html_table(concepts, blank_na=True, blank_false=True):
+    """
+    produce an HTML table of concepts
+    Input: 
+    - concepts  -- a list of dictionaries or a dataframe
+
+    Output:
+    html string
+    """
+
+    pd.set_option('display.max_rows', len(concepts)+1)
+    concepts_df = pd.DataFrame(concepts)
+    concepts_df = concepts_df[COL_ORDER]
+
+    concepts_df.columns = concepts_df.columns.map(partial(modify_column_names,
+                                                  columns={'hof': 'hx',
+                                                  'offset_end':'end',
+                                                  'offset_start':'start'}))
+    
+    concepts_df_str = concepts_df.applymap(str)
+
+    # blank out 'na' and 'f'/'False' values
+    if blank_na:
+        mask_na = concepts_df.applymap(lambda x: (x=='na') or (x is None))
+        concepts_df_str[mask_na] = ''
+    if blank_false:
+        concepts_df_str[concepts_df == False] = ''
+
+    for col in ['negated','location','domain', 'past']:
+        if col not in concepts_df_str:
+            continue
+        concepts_df_str[col] = concepts_df_str[col].str.lower()
+
+    drop_cols = concepts_df_str.columns[(concepts_df_str == '').all(0)]
+    concepts_df_str.drop(drop_cols, axis=1, inplace=True)
+    concept_html = concepts_df_str._repr_html_()
+
+    concept_html = re.sub(r'<tr>\n      <th>(\d+)</th>\n(\s+)<td>(.*)</td>',
+                          r'<tr class="entity_row" id="row_\1">\n      '+
+                          r'<th id="row_\1">\1</th>\n\2<td><a href="#entity_\1">\3</td>',
+                         #r'<tr>\n      <th>(\d+)</th>\n',
+                         # r'<tr class="entity_row" id="row_\1">\n      '+
+                         # r'<th class="entity_id_cell" >\1</th>\n',
+                          concept_html)
+    concept_html = concept_html.replace('<tr style="text-align: right;">', '<tr>')
+    return concept_html
+
+
 if __name__ == '__main__':
     import argparse
     import os
@@ -113,16 +161,18 @@ if __name__ == '__main__':
     parser.add_argument('report', help='report text file path', type=str)
     parser.add_argument('json', help='file path of the JSON-formatted CTAKES extract or folder that contains it', 
                         type=str)
-    parser.add_argument('--report-dir', help='report text directory', type=str)
+    parser.add_argument('--html', help='folder to store an html file', default='html')
     parser.add_argument('--no-table', action="store_false", default=True,
                         dest='table')
-    parser.add_argument('--no-save', action="store_true", default=False)
     parser.add_argument('--no-browser', action="store_false", default=True,
                         dest='browser')
-    parser.add_argument('--html-dir', help='folder to store an html file', default='html')
     args = parser.parse_args()
     save = ~ args.no_save
 
+
+    if os.path.isdir(args.report):
+        print('`report` argument is a directory')
+        sys.exit(1)
 
     id = os.path.split(args.report)[-1].replace('.txt', '')
     if os.path.isdir(args.json):
@@ -161,62 +211,25 @@ if __name__ == '__main__':
               #  'range_text',
               ]
     if args.table:
-        pd.set_option('display.max_rows', len(concepts)+1)
-        concepts_df = pd.DataFrame(concepts)
-        concepts_df = concepts_df[COL_ORDER]
-
-        concepts_df.columns = concepts_df.columns.map(partial(modify_column_names,
-                                                      columns={'hof': 'hx',
-                                                      'offset_end':'end',
-                                                      'offset_start':'start'}))
-        
-        concepts_df_str = concepts_df.applymap(str)
-
-        # blank out 'na' and 'f'/'False' values
-        mask_na = concepts_df.applymap(lambda x: (x=='na') or (x is None))
-        concepts_df_str[mask_na] = ''
-        concepts_df_str[concepts_df == False] = ''
-
-        for col in ['negated','location','domain', 'past']:
-            if col not in concepts_df_str:
-                continue
-            concepts_df_str[col] = concepts_df_str[col].str.lower()
-
-        drop_cols = concepts_df_str.columns[(concepts_df_str == '').all(0)]
-        concepts_df_str.drop(drop_cols, axis=1, inplace=True)
-        concept_html = concepts_df_str._repr_html_()
-
-        concept_html = re.sub(r'<tr>\n      <th>(\d+)</th>\n(\s+)<td>(.*)</td>',
-                              r'<tr class="entity_row" id="row_\1">\n      '+
-                              r'<th id="row_\1">\1</th>\n\2<td><a href="#entity_\1">\3</td>',
-                             #r'<tr>\n      <th>(\d+)</th>\n',
-                             # r'<tr class="entity_row" id="row_\1">\n      '+
-                             # r'<th class="entity_id_cell" >\1</th>\n',
-                              concept_html)
-        concept_html = concept_html.replace('<tr style="text-align: right;">', '<tr>')
-        # re.sub(r"\<th\>(\d+)\<th\>", r"\1,\2", coords)
-        # concept_html.replace('<th> name="chapter')
+        concept_table_html = produce_html_table(concepts, blank_na=True, blank_false=True)
         html_ = (f'<div class="left"><div class="left-sub">{html_}</div></div>\n' +
-                 f'<div class="right">{concept_html}</div>')
+                 f'<div class="right">{concept_table_html}</div>')
 
     html_ = add_css_head(html_)
 
-    if save:
-        from pathlib import Path
+    from pathlib import Path
 
-        parent = os.getcwd()
-        os.makedirs(os.path.join(parent, args.html_dir), exist_ok=True)
+    parent = os.getcwd()
+    os.makedirs(os.path.join(parent, args.html), exist_ok=True)
 
-        path = os.path.join(parent, args.html_dir, f'{id}.html')
-        path = Path(path)
-        url = path.absolute().as_uri()
+    path = os.path.join(parent, args.html, f'{id}.html')
+    path = Path(path)
+    url = path.absolute().as_uri()
 
-        print(f'saving to:\t{path}')
-        with open(path, 'w') as fh:
-            fh.write(html_)
-        
-        if args.browser:
-            import webbrowser
-            webbrowser.open(url)
-    else:
-        print(html_)
+    print(f'saving to:\t{path}')
+    with open(path, 'w') as fh:
+        fh.write(html_)
+    
+    if args.browser:
+        import webbrowser
+        webbrowser.open(url)
