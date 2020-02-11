@@ -167,8 +167,6 @@ if __name__ == '__main__':
     parser.add_argument('--no-browser', action="store_false", default=True,
                         dest='browser')
     args = parser.parse_args()
-    save = ~ args.no_save
-
 
     if os.path.isdir(args.report):
         print('`report` argument is a directory')
