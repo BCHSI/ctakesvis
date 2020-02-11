@@ -4,4 +4,6 @@ This tool overlays concepts / tokens extracted by UCSF CTAKES client with an ori
 
 To generate a visualization, run:
 
-    python ctakesvis.py [plain_text_report.txt] [ctakes_extract.json]
+    python ctakesvis.py [-html] [plain text: path/to/note.txt] [ctakes extract: path/to/note_combined_output.json]
+
+    python ctakesvis.py [plain text note] [directory of ctakes extract]
