@@ -6,6 +6,15 @@ import pandas as pd
 from ctakesvis import concat_concepts
 
 
+def convert_row_to_doccano_input(x):
+    """Output format:
+    [[start, end, label],
+     [start, end, label],
+     ...]
+    """
+    return [x['offset_start'], x['offset_end'], x['label']]
+
+
 def construct_label(x):
     """This is a toy example function for selecting (narrowing down)
     a set of labels based on CTAKES annotation.
@@ -39,21 +48,18 @@ parser.add_argument('-o', '--output', help='output file', type=str)
 args = parser.parse_args()
 
 
-input_dir = args.reports #'samples'
-ctakes_dir = args.jsons #'samples-extracts/samples'
-
-#outdir = f'{input_dir}-prelabelled'
-#os.makedirs(outdir, exist_ok=True)
 if args.output is None:
     outdir = '.'
-    out_filepath = os.path.join(outdir, f'{input_dir}-ctakes.jsonl')
+    #os.makedirs(outdir, exist_ok=True)
+    out_filepath = os.path.join(outdir, f'{args.reports}-ctakes.jsonl')
 else:
     out_filepath = args.output
 
 lines = ''
     
-for file in os.scandir(input_dir):
-    ctakes_filepath = os.path.join(ctakes_dir, file.name.replace('.txt','_combined_output.json'))
+for file in os.scandir(args.reports):
+    ctakes_filename = file.name.replace('.txt','_combined_output.json')
+    ctakes_filepath = os.path.join(args.jsons, ctakes_filename)
     
     txt_filepath = file.path
     
@@ -61,8 +67,8 @@ for file in os.scandir(input_dir):
         continue
         
     print(file.name)
-    # read a text file 
 
+    # read a text file 
     with open(txt_filepath) as fh:
         txt = fh.read()
     print('# characters:',  len(txt))
@@ -77,7 +83,9 @@ for file in os.scandir(input_dir):
     print()
     if len(concepts) == 0:
         continue
-    # if there are more than one label per concept, take first one (yes, this is arbitrary)
+
+    # if there are more than one label per concept,
+    # take first one (yes, this is arbitrary)
     concepts_unique = concepts[['hof','negated', 'domain', 'offset_start', 'offset_end',
               ]].groupby(['offset_start', 'offset_end',]).first().reset_index()
     # simplify domain names
@@ -86,9 +94,8 @@ for file in os.scandir(input_dir):
     
     # convert a dataframe to a list of lists: 
     # [[start, end, label],       [start, end, label],       ...]
-    
-    label_list = (concepts_unique[['offset_start', 'offset_end', 'label']]
-         .apply(lambda x: [x['offset_start'], x['offset_end'], x['label']], 1)
+    label_list = (concepts_unique
+         .apply(convert_row_to_doccano_input, 1)
          .tolist())
     
     lines += json.dumps(
