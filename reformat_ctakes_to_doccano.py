@@ -6,6 +6,15 @@ import pandas as pd
 from ctakesvis import concat_concepts
 
 
+def convert_row_to_doccano_input_label(x):
+    """Output format:
+    [[start, end, label],
+     [start, end, label],
+     ...]
+    """
+    return [x['offset_start'], x['offset_end'], x['label']]
+
+
 def construct_label(x):
     """This is a toy example function for selecting (narrowing down)
     a set of labels based on CTAKES annotation.
@@ -88,7 +97,7 @@ for file in os.scandir(input_dir):
     # [[start, end, label],       [start, end, label],       ...]
     
     label_list = (concepts_unique[['offset_start', 'offset_end', 'label']]
-         .apply(lambda x: [x['offset_start'], x['offset_end'], x['label']], 1)
+         .apply(convert_row_to_doccano_input_label, 1)
          .tolist())
     
     lines += json.dumps(
