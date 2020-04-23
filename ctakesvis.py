@@ -248,20 +248,27 @@ def generate_index(dirname):
 
 def generate_summary(dirname, summary, fname='name',
                      tag = "contents-table"):
-    summary = pd.DataFrame(summary)
-    cols = [str(col) for col in summary.columns]
-    summary.columns = cols
+    print(summary)
+    cols = set()
+    for su in summary:
+        cols = cols | su.keys()
+    cols = [str(col) for col in cols]
+    #summary = pd.DataFrame(summary)
+    #cols = [str(col) for col in summary.columns]
+    #summary.columns = cols
     cols.remove(fname)
     cols = [fname] + cols
-    summary = summary.reindex(columns=cols)
-    concept_table_js = get_table_js(summary.to_dict(orient='records'),
+    for su in summary:
+        su = {kk: su[kk] for kk in cols if kk in su}
+    #summary = summary.reindex(columns=cols)
+    concept_table_js = get_table_js(summary, #.to_dict(orient='records'),
                                     tag=tag,
                                     layout=None,#"fitDataStretch",
                                     height=None,
                                     href='file',
                                     first_col_width="{:1.0%}".format(1/len(cols)),
                                     vertical=False,
-                                    #col_order=col_order,
+                                    col_order=cols,
                                     #name_mapping = name_mapping,
                                     #highlight=highlight
                                     )
@@ -391,8 +398,8 @@ if __name__ == '__main__':
             summary_ = summary_.to_dict()
         else:
             summary_ = {}
-            summary_['name'] = input_data['id']
-            summary.append(summary_)
+        summary_['name'] = input_data['id']
+        summary.append(summary_)
 
 
     # write summary / index page
