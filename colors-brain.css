@@ -1,0 +1,27 @@
+.title       { color:#939393; font-weight:800; float: left; width: 90px;}
+.text        { float: left; width: 80%}
+.mib1        { background-color: #FFDC00;}
+.idh1Ihc     { background-color:#FF851B;}
+.p53Ihc      { background-color:#01FF70;}
+.atrxIhc         { background-color:#7FDBFF;}
+.idh1Sequencing  { background-color:#F012BE;}
+
+.left {
+    float: left;
+    width: 60%;
+    height: 100%;
+    overflow-y:auto;
+}
+
+.left-sub {
+    margin-top: 20px;
+    margin-left: 8%;
+    width: 90%;
+}
+
+.right {
+    margin-top: 20px;
+    margin-left: 60%;
+    height: 100%;
+   /* overflow-y:auto; */
+}

@@ -38,13 +38,14 @@ def construct_label(x):
 
 import argparse
 parser = argparse.ArgumentParser(
-description='Convert notes with annotations to a JSONL file compatible with Doccano labelling tool'
-                             )
+    description='Convert notes with annotations to a JSONL file compatible with Doccano labelling tool'
+                                 )
 
 parser.add_argument('reports', help='report text file path', type=str)
 parser.add_argument('jsons', help='file path of the JSON-formatted CTAKES extract or folder that contains it',
                     type=str)
 parser.add_argument('-o', '--output', help='output file', type=str)
+parser.add_argument('-d', '--domain', help='filter by domain', type=str)
 args = parser.parse_args()
 
 
@@ -94,6 +95,8 @@ for file in os.scandir(args.reports):
               ]].groupby(['offset_start', 'offset_end',]).first().reset_index()
     # simplify domain names
     concepts_unique['domain'] = concepts_unique['domain'].map(lambda x: x.split('_')[-1])
+    if args.domain:
+        concepts_unique = concepts_unique[concepts_unique.domain == args.domain]
     concepts_unique['label'] = concepts_unique.apply(construct_label, 1)
     
     # convert a dataframe to a list of lists: 
@@ -103,7 +106,8 @@ for file in os.scandir(args.reports):
          .tolist())
     
     lines += json.dumps(
-        {'text': txt,
+        {'title': os.path.basename(file.name),
+        'text': txt,
         'labels':label_list
         }) + '\n'
 
