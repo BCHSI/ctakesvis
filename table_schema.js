@@ -78,7 +78,7 @@ function createTable(tag, tabledata, schema, highlight=null,
     }
   }, schema); 
 
-  var table = new Tabulator('#'+tag, {
+  return new Tabulator('#'+tag, {
       height: height, // set height of table to enable virtual DOM
       data:tabledata, //load initial data into table
       layout:layout, //fit columns to width of table (optional)

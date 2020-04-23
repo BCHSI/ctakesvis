@@ -13,7 +13,7 @@ boilerplate_data = \
      var tabledata = {tabledata};
      var name_mapping = {name_mapping};
      var href = {href};
-     createTable("{tag}", tabledata, schema, 
+     var tbl = createTable("{tag}", tabledata, schema, 
                  highlight=highlight, name_mapping=name_mapping,
                  vertical={vertical}, layout={layout},
                  height={height}, firstColWidth={first_col_width}, 

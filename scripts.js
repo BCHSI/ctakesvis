@@ -29,6 +29,8 @@ function highlightConceptText(row_id){
 function highlightConceptEverywhere(){
     console.log("id:" + this.id);
     var id_ = this.id.split("_")[1];
+    // call to global var `tbl` (some rows are hidden)
+    tbl.scrollToRow(parseInt(id_), "center", false); 
     var row_id = "row_" + id_;
     changeColorTable(row_id);
     var row_id = "entity_" + id_;
