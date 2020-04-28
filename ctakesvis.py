@@ -213,8 +213,20 @@ def vis_report(text, concepts, col_order = [], name_mapping = {},
                                     tag=tag,
                                     col_order=col_order,
                                     name_mapping = name_mapping,
-                                    highlight=highlight)
-    concept_table_html = f'<div id="{tag}"></div>'
+                                    highlight=highlight,
+                                    height='96.5%')
+
+    concept_table_html = f'''<div id="{tag}"></div>
+      <div class="table-controls">
+      <button id="download-csv">Download CSV</button>
+      <button id="download-json">Download JSON</button>
+      <!--
+      <button id="download-xlsx">Download XLSX</button>
+      <button id="download-pdf">Download PDF</button>
+      --!>
+      </div>
+    '''
+
     html_ = ('<div class="left"><div class="left-sub">' + html_ + '</div></div>\n' +
              '<div class="right">' + concept_table_html +'</div>' + concept_table_js)
 
@@ -272,7 +284,8 @@ def generate_summary(dirname, summary, fname='name',
                                     #name_mapping = name_mapping,
                                     #highlight=highlight
                                     )
-    table_html = f'<div id="{tag}"></div>'
+    table_html = f'''<div id="{tag}"></div>
+    '''
     html_ = '<h1>Annotated files:</h1>' + table_html + concept_table_js
 
     html_ =  add_css_head(html_, colors=None)

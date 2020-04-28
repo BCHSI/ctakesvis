@@ -43,8 +43,9 @@ function highlightValues(row, formatterParams){
 
 // main function:
 function createTable(tag, tabledata, schema, highlight=null,
-                    name_mapping={}, vertical=true, height="100%",
-                    layout="fitColumns", firstColWidth="20%",
+                    name_mapping={}, layout="fitColumns", 
+                    vertical=true, height="100%",
+                    firstColWidth="20%",
                     href='id'){
   // add "id" column if missing 
   if (! tabledata[0].hasOwnProperty("id")){
@@ -56,6 +57,7 @@ function createTable(tag, tabledata, schema, highlight=null,
   // add formatters to the schema
   console.log("href setter: " + href);
   console.log("width: " + firstColWidth);
+  console.log("height: " + height);
   if (href == 'id'){
     schema[0]["formatter"] = formatFirstColId;
   } else if (href=='file'){
