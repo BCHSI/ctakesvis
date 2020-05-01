@@ -18,7 +18,7 @@ var headerMenu = [
 // File URL
 function formatFirstColFile(row, formatterParams){
   let rowId = row.getData().id;
-  let cellValue = row.getValue()
+  let cellValue = row.getValue();
   return ("<a class='entity_row' id='row_" + rowId + 
           "' href='" + cellValue + ".html' style='text-align: left;'>"
           + cellValue + "</a>")
@@ -28,7 +28,7 @@ function formatFirstColFile(row, formatterParams){
 function formatFirstColId(row, formatterParams){
   let rowId = row.getData().id;
   //let rowData = row.getData();
-  let cellValue = row.getValue()
+  let cellValue = row.getValue();
   return ("<a class='entity_row' id='row_" + rowId + 
           "' href='#entity_" + rowId + "' style='text-align: left;'>"
           + cellValue + "</a>")
@@ -37,7 +37,7 @@ function formatFirstColId(row, formatterParams){
 
 function highlightValues(row, formatterParams){
     let rowId = row.getData().id;
-    let cellValue = row.getValue()
+    let cellValue = row.getValue();
     return "<a class='" + cellValue + "'>" + cellValue + "</a>"
 }
 
