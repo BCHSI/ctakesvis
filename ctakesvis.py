@@ -10,6 +10,20 @@ import warnings
 from tabulator_link import get_table_js
 
 
+COL_ORDER_CTAKES = ['canon_text',
+             'negated',
+             'location',
+             'domain',
+             'hof',
+             #'imputed_time',
+             #'value',
+             'conditional',
+             'cui',
+             'location_snomed_id',
+             'vocab_term',
+             'vocab',
+            ]
+
 def warning_on_one_line(message, category, filename, lineno, file=None, line=None):
         return '%s:%s: %s:%s\n' % (filename, lineno, category.__name__, message)
 
@@ -339,23 +353,10 @@ if __name__ == '__main__':
     ###############################################
     # ctakes-specific variables
     if args.ctakes:
-        COL_ORDER = ['canon_text',
-                     'negated',
-                     'location',
-                     'domain',
-                     'hof',
-                     #'imputed_time',
-                     #'value',
-                     'conditional',
-                     'cui',
-                     'location_snomed_id',
-                     'vocab_term',
-                     'vocab',
-                    ]
-
+        col_order = COL_ORDER_CTAKES
         name_mapping = {"canon_text": "text", "hof": "hx"}
     else:
-        COL_ORDER = []
+        col_order = []
         name_mapping = {}
 
     summary = []
@@ -371,7 +372,7 @@ if __name__ == '__main__':
         # catch file errors and return as warnings
         try:
             input_data = read_ucsf_ctakes(fp_report, args.extract,
-                             col_order=COL_ORDER, suffix=args.suffix)
+                             col_order=col_order, suffix=args.suffix)
             # input_data is a dictionary with keys:
             # - text
             # - concepts
