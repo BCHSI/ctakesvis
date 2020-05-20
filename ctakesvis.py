@@ -102,18 +102,21 @@ def annotation_json2html(txt, anns,
     return html_
 
 
+def boolean_from_t_f(entry, columns=['conditional', 'hof', 'negated']):
+    for col in columns:
+        if col not in entry:
+            continue
+        entry[col] = (entry[col] == 't')
+    return entry
+
+
 def concat_concepts(results, start='offset_start'):
     """flattens the `.domains` field and adds `concepts.name` field to the list"""
     concepts = []
     for res in results['domains']:
         domain = res['name'].replace(' ', '_')
         concepts_ = res['concepts']
-        for entry in concepts_:
-            entry['domain'] = domain
-            for col in ['conditional', 'hof', 'negated']:
-                if col not in entry:
-                    continue
-                entry[col] = (entry[col] == 't')
+        concepts_ = [boolean_from_t_f(entry) for entry in concepts_]
         concepts.extend(concepts_)
 
     concepts = sorted(concepts, key = lambda x: x[start])
