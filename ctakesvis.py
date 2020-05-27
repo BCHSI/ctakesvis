@@ -7,7 +7,7 @@ import re
 import pandas as pd
 from warnings import warn
 import warnings
-from tabulator_link import get_table_js
+from tabulator_link import get_table_js, get_text_and_table_js
 
 
 COL_ORDER_CTAKES = ['canon_text',
@@ -41,67 +41,6 @@ def rename_domain_inplace(x):
     return x
 
 
-def annotation_json2html(txt, anns,
-                   start = 'start',
-                   end = 'end',
-                   label='label',
-                   location='location',
-                   highlight='domain'):
-    prev_end = 0
-    prev_start = 0
-    html_ = ''
-    for ii, ann in enumerate(anns):
-        label_ = ann[label]
-        if 'negated' in ann and ann['negated']:
-            label_ = '&#10060; ' + label_
-        tip_text = f'<i>{ii}:</i> {label_}'
-        if (location in ann) and (ann[location]):
-            location_ = ann[location]
-            tip_text += f'<br/><i>in: </i> ' + location_
-        tip_text = f'<a href="#row_{ii}" class="ttt" >{tip_text}</a>'
-
-        if highlight in ann:
-            domain = ann[highlight].replace(' ', '_')
-
-        try:
-            start_ = int(ann[start])
-            end_ = int(ann[end])
-        except ValueError as ee:
-            warn(str(ee))
-            #print(str(ee))
-            continue
-
-        if (start_ > prev_end):
-            try:
-                txt_span = txt[prev_end:start_].replace('\n','<br/>\n')
-                html_+= '<span>' + txt_span + '</span>'
-                ### moved from prev
-                prefix = ''
-                word = txt[start_:end_]
-            except TypeError as ee:
-                raise ee
-        # overlapping cases
-        elif (end_ > prev_end):
-            prefix = ' '
-            word = txt[prev_end:end_]
-        else:
-            prefix = ''
-            word = '<sup>&dagger;</sup>'
-        #onclick="deleteConcept(this)"
-        html_+= (prefix 
-                 + f'<div class="ttooltip" id="entity_{ii}">'
-                 + f'<span class={domain}>{word}</span>'
-                 + f'<span class="tooltiptext" id="tooltiptext_{ii}">'
-                 + f'{tip_text}</span></div>')
-
-        prev_start = start_
-        prev_end = end_
-
-    txt_span = txt[prev_end:].replace('\n','<br/>\n')
-    html_+= '<span>' + txt_span + '</span>'
-    return html_
-
-
 def boolean_from_t_f(entry, columns=['conditional', 'hof', 'negated']):
     for col in columns:
         if col not in entry:
@@ -117,6 +56,7 @@ def concat_concepts(results, start='offset_start'):
         domain = res['name'].replace(' ', '_')
         concepts_ = res['concepts']
         concepts_ = [boolean_from_t_f(entry) for entry in concepts_]
+        [entry.update({'domain': domain}) for entry in concepts_]
         concepts.extend(concepts_)
 
     concepts = sorted(concepts, key = lambda x: x[start])
@@ -220,17 +160,16 @@ def vis_report(text, concepts, col_order = [], name_mapping = {},
     """
     """
 
-    html_ = annotation_json2html(text, concepts, 
-                                 start=start,
-                                 end=end,
-                                 label=label,
-                                 highlight=highlight)
     tag = "concept-table"
-    concept_table_js = get_table_js(concepts,
+    concept_table_js = get_text_and_table_js(text,
+                                    concepts,
+                                    start=start,
+                                    end=end,
+                                    label=label,
+                                    highlight=highlight,
                                     tag=tag,
                                     col_order=col_order,
                                     name_mapping = name_mapping,
-                                    highlight=highlight,
                                     height='96.5%')
 
     concept_table_html = f'''<div id="{tag}"></div>
@@ -244,7 +183,8 @@ def vis_report(text, concepts, col_order = [], name_mapping = {},
       </div>
     '''
 
-    html_ = ('<div class="left"><div class="left-sub">' + html_ + '</div></div>\n' +
+    html_ = ('<div class="left"><div class="left-sub">' +
+             '</div></div>\n' +
              '<div class="right">' + concept_table_html +'</div>' + concept_table_js)
 
     html_ = add_css_head(html_,  colors=colorscheme)

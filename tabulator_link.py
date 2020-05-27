@@ -6,18 +6,50 @@ boilerplate_data = \
 """
   <script type="text/javascript" src="../tabulator/dist/js/tabulator.min.js"></script>
   <link href="../tabulator/dist/css/tabulator.min.css" rel="stylesheet">
+  <script type="text/javascript" src="../annotate_text.js"></script>
   <script type="text/javascript" src="../table_schema.js"></script>
   <script type="text/javascript">
-     var highlight = {highlight};
-     var schema = {schema};
-     var tabledata = {tabledata};
-     var name_mapping = {name_mapping};
-     var href = {href};
-     var tbl = createTable("{tag}", tabledata, schema,
-                highlight=highlight, name_mapping=name_mapping,
-                layout={layout}, vertical={vertical},
-                height={height}, firstColWidth={first_col_width},
-                href=href);
+
+    var tabledata = {tabledata};
+    var txt = `{text}`;
+    var highlight = {highlight};
+
+    var html1 = annotateTextWithJson(txt, tabledata,
+                                     start ="{start}",        // "offset_start"
+                                     end = "{end}",            // "offset_end"
+                                     label="{label}",          // "canon_text"
+                                     loc = "{location}",       // "location"
+                                     highlight=highlight);   // "domain"
+    $(".left-sub").append(html1);
+
+    var schema = {schema};
+    var name_mapping = {name_mapping};
+
+    var tbl = createTable("{tag}", tabledata, schema,
+               highlight=highlight, name_mapping=name_mapping,
+               layout={layout}, vertical={vertical},
+               height={height}, firstColWidth={first_col_width},
+               href={href});
+  </script>
+"""
+
+boilerplate_index = \
+"""
+  <script type="text/javascript" src="../tabulator/dist/js/tabulator.min.js"></script>
+  <link href="../tabulator/dist/css/tabulator.min.css" rel="stylesheet">
+  <script type="text/javascript" src="../table_schema.js"></script>
+  <script type="text/javascript">
+
+    var tabledata = {tabledata};
+    var highlight = {highlight};
+    var schema = {schema};
+    var name_mapping = {name_mapping};
+
+    var tbl = createTable("{tag}", tabledata, schema,
+               highlight=highlight, name_mapping=name_mapping,
+               layout={layout}, vertical={vertical},
+               height={height}, firstColWidth={first_col_width},
+               href={href});
   </script>
 """
 
@@ -56,6 +88,39 @@ def get_schema(concepts, col_order, **kwargs):
     return col_list
 
 
+def get_text_and_table_js(text, concepts, 
+                 col_order = [], name_mapping = {}, 
+                 start="start",
+                 end="end",
+                 label="label",
+                 location='location',
+                 tag = 'concept-table', 
+                 highlight=None, 
+                 vertical=True, layout="fitColumns", 
+                 height='100%', href='id',
+                 first_col_width="20%", **kwargs):
+    "generate javascript table data and code"
+    schema = get_schema(concepts=concepts, col_order=col_order)
+    schema = json.dumps(schema).replace('}, ', '},\n    ')
+    return boilerplate_data.format(
+                        text = text,
+                        tabledata=json.dumps(concepts),
+                        start = start,
+                        end = end,
+                        label = label,
+                        location = location,
+                        tag = tag,
+                        highlight = json.dumps(highlight),
+                        schema = schema,
+                        name_mapping = json.dumps(name_mapping),
+                        vertical=json.dumps(vertical),
+                        layout=json.dumps(layout),
+                        height=json.dumps(height),
+                        href = json.dumps(href),
+                        first_col_width = json.dumps(first_col_width),
+                        )
+
+
 def get_table_js(concepts, col_order = [], name_mapping = {}, 
                  tag = 'concept-table', highlight=None, 
                  vertical=True, layout="fitColumns", 
@@ -64,7 +129,7 @@ def get_table_js(concepts, col_order = [], name_mapping = {},
     "generate javascript table data and code"
     schema = get_schema(concepts=concepts, col_order=col_order)
     schema = json.dumps(schema).replace('}, ', '},\n    ')
-    return boilerplate_data.format(
+    return boilerplate_index.format(
                         tag = tag,
                         highlight = json.dumps(highlight),
                         schema = schema,
@@ -75,6 +140,4 @@ def get_table_js(concepts, col_order = [], name_mapping = {},
                         height=json.dumps(height),
                         href = json.dumps(href),
                         first_col_width = json.dumps(first_col_width),
-                        **{kk:json.dumps(vv) for kk,vv in kwargs.items()}
                         )
-
