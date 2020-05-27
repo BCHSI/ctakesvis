@@ -8,7 +8,12 @@ import pandas as pd
 from warnings import warn
 import warnings
 from tabulator_link import get_table_js, get_text_and_table_js
-
+import tempfile
+from shutil import copyfile, copy, copytree
+from os.path import join as pjoin
+import os
+import webbrowser
+from pathlib import Path
 
 COL_ORDER_CTAKES = ['canon_text',
              'negated',
@@ -248,6 +253,61 @@ def generate_summary(dirname, summary, fname='name',
     html_ =  add_css_head(html_, colors=None)
     return html_
 
+
+def visulize_ctakes_mongo(note, concepts, note_key='na',
+                          browser=True,
+                          copy_package=True,
+                          label='canon_text',
+                          start='offset_start',
+                          end='offset_end'):
+    
+    for item in concepts:
+        if '_id' in item:
+            item.pop('_id')
+    
+    concepts = [rename_domain_inplace(boolean_from_t_f(concept)) for concept
+                in concepts]
+    
+    name_mapping = {"canon_text": "text", "hof": "hx"}
+    html_ = vis_report(note, concepts,
+                       COL_ORDER_CTAKES,
+                       name_mapping=name_mapping,
+                       label=label,
+                       start=start, end=end,
+                       )
+    
+    tmdir = tempfile.gettempdir()
+    html_dir = pjoin(tmdir, 'html')
+    path = Path(html_dir, str(note_key) + '.html')
+    
+    
+    os.makedirs(html_dir, exist_ok=True)
+    with open(path, 'w') as fh:
+        fh.write(html_)
+    
+    if copy_package:
+       ctakesvis_home = os.path.dirname(os.path.realpath(__file__))
+       try:    
+           copytree(pjoin(ctakesvis_home, 'tabulator'),
+                    pjoin(tmdir,'tabulator' ))
+       except FileExistsError as ee:
+           pass
+        
+       for ff in os.scandir(str(ctakesvis_home)):
+           if ff.name.endswith('.css') or ff.name.endswith('.js'):
+               try:
+                   # if not os.path.exists()
+                   copy(ff.path, pjoin(tmdir))
+                   print(ff.name)
+               except FileExistsError as ee:
+                   print(ee)
+    
+    url = path.absolute().as_uri()
+    if browser:
+        webbrowser.open(url)
+    return url
+
+
 if __name__ == '__main__':
     from pathlib import Path
     import argparse
@@ -368,6 +428,7 @@ if __name__ == '__main__':
             fh.write(html_)
 
     if args.browser:
-        import webbrowser
+        
         url = path.absolute().as_uri()
         webbrowser.open(url)
+
