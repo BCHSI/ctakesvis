@@ -2,12 +2,23 @@ import json
 import pandas as pd
 
 ## Achtung: hardcoded JS and CSS locations
-boilerplate_data = \
-"""
-  <script type="text/javascript" src="../tabulator/dist/js/tabulator.min.js"></script>
+HEADER = """
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../styles.css">
+  {colorscheme}
   <link href="../tabulator/dist/css/tabulator.min.css" rel="stylesheet">
+  
+  <script src="../jquery.min.js"></script>
+  <script src="../scripts.js" type="text/javascript"></script>
+
+  <script type="text/javascript" src="../tabulator/dist/js/tabulator.min.js"></script>
   <script type="text/javascript" src="../annotate_text.js"></script>
   <script type="text/javascript" src="../table_schema.js"></script>
+</head>
+"""
+
+boilerplate_data = """
   <script type="text/javascript">
 
     var tabledata = {tabledata};
@@ -35,9 +46,6 @@ boilerplate_data = \
 
 boilerplate_index = \
 """
-  <script type="text/javascript" src="../tabulator/dist/js/tabulator.min.js"></script>
-  <link href="../tabulator/dist/css/tabulator.min.css" rel="stylesheet">
-  <script type="text/javascript" src="../table_schema.js"></script>
   <script type="text/javascript">
 
     var tabledata = {tabledata};
@@ -72,6 +80,13 @@ def get_col_types_for_js(concept_dict_list):
     )
 
 
+def get_head(colors=None):
+    if colors is not None:
+        colorscheme = f'<link rel="stylesheet" href="../{colors}">'
+    else:
+        colorscheme=""
+    return HEADER.format(colorscheme=colorscheme)
+
 def get_schema(concepts, col_order, **kwargs):
     # {title:"Name", field:"name", sorter:"string", width:150, hozAlign:"left", formatter:"progress", sortable:false},
     col_types = get_col_types_for_js(concepts)
@@ -88,7 +103,18 @@ def get_schema(concepts, col_order, **kwargs):
     return col_list
 
 
-def get_text_and_table_js(text, concepts, 
+def vis_report(text, concepts, col_order = [], name_mapping = {},
+               start='start', end='end', label='label', highlight='domain',
+               colorscheme='colors-ctakes.css', **kwargs):
+    """
+    """
+
+    tag = "concept-table"
+
+    return html_
+
+
+def vis_report(text, concepts, 
                  col_order = [], name_mapping = {}, 
                  start="start",
                  end="end",
@@ -96,13 +122,30 @@ def get_text_and_table_js(text, concepts,
                  location='location',
                  tag = 'concept-table', 
                  highlight=None, 
-                 vertical=True, layout="fitColumns", 
-                 height='100%', href='id',
-                 first_col_width="20%", **kwargs):
+                 vertical=True,
+                 layout="fitColumns", 
+                 height='96.5%',
+                 href='id',
+                 first_col_width="20%",
+                 colorscheme = None,
+                 **kwargs):
     "generate javascript table data and code"
+    head = get_head(colorscheme)
     schema = get_schema(concepts=concepts, col_order=col_order)
     schema = json.dumps(schema).replace('}, ', '},\n    ')
-    return boilerplate_data.format(
+
+    concept_table_html = f'''<div id="{tag}"></div>
+      <div class="table-controls">
+      <button id="download-csv">Download CSV</button>
+      <button id="download-json">Download JSON</button>
+      <!--
+      <button id="download-xlsx">Download XLSX</button>
+      <button id="download-pdf">Download PDF</button>
+      --!>
+      </div>
+    '''
+
+    main_dish = boilerplate_data.format(
                         text = text,
                         tabledata=json.dumps(concepts),
                         start = start,
@@ -119,6 +162,11 @@ def get_text_and_table_js(text, concepts,
                         href = json.dumps(href),
                         first_col_width = json.dumps(first_col_width),
                         )
+    html = (head + '<div class="left"><div class="left-sub">' +
+             '</div></div>\n' +
+             '<div class="right">' + concept_table_html +'</div>' + main_dish)
+    return html
+
 
 
 def get_table_js(concepts, col_order = [], name_mapping = {}, 
@@ -127,9 +175,10 @@ def get_table_js(concepts, col_order = [], name_mapping = {},
                  height='100%', href='id',
                  first_col_width="20%", **kwargs):
     "generate javascript table data and code"
+    head = get_head()
     schema = get_schema(concepts=concepts, col_order=col_order)
     schema = json.dumps(schema).replace('}, ', '},\n    ')
-    return boilerplate_index.format(
+    return head + boilerplate_index.format(
                         tag = tag,
                         highlight = json.dumps(highlight),
                         schema = schema,

@@ -7,7 +7,7 @@ import re
 import pandas as pd
 from warnings import warn
 import warnings
-from tabulator_link import get_table_js, get_text_and_table_js
+from tabulator_link import get_table_js, vis_report 
 import tempfile
 from shutil import copyfile, copy, copytree
 from os.path import join as pjoin
@@ -69,6 +69,7 @@ def concat_concepts(results, start='offset_start'):
 
 def add_css_head(html_, *args, colors=None):
     include = [
+    '<meta charset="utf-8"/>',
     '<link rel="stylesheet" href="../styles.css">',
     #'<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>',
     '<script src="../jquery.min.js"></script>',
@@ -158,42 +159,6 @@ def read_ucsf_ctakes(fn_report, extract, col_order=[], suffix='.json'):
     concepts, col_order = read_extract(fn_json, col_order=col_order)
     return {'text': txt, 'concepts': concepts, 'col_order': col_order, 'id':id}
 
-
-def vis_report(text, concepts, col_order = [], name_mapping = {},
-               start='start', end='end', label='label', highlight='domain',
-               colorscheme='colors-ctakes.css', **kwargs):
-    """
-    """
-
-    tag = "concept-table"
-    concept_table_js = get_text_and_table_js(text,
-                                    concepts,
-                                    start=start,
-                                    end=end,
-                                    label=label,
-                                    highlight=highlight,
-                                    tag=tag,
-                                    col_order=col_order,
-                                    name_mapping = name_mapping,
-                                    height='96.5%')
-
-    concept_table_html = f'''<div id="{tag}"></div>
-      <div class="table-controls">
-      <button id="download-csv">Download CSV</button>
-      <button id="download-json">Download JSON</button>
-      <!--
-      <button id="download-xlsx">Download XLSX</button>
-      <button id="download-pdf">Download PDF</button>
-      --!>
-      </div>
-    '''
-
-    html_ = ('<div class="left"><div class="left-sub">' +
-             '</div></div>\n' +
-             '<div class="right">' + concept_table_html +'</div>' + concept_table_js)
-
-    html_ = add_css_head(html_,  colors=colorscheme)
-    return html_
 
 def generate_index(dirname):
     "deprecated"
