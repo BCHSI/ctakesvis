@@ -8,6 +8,10 @@ To generate a visualization, run:
 
     python ctakesvis.py [plain text note] [directory of ctakes extract]
 
+# Demo
+
+![](demo-small.gif)
+
 # Generating summaries
 
 the tool will output an Index page, which can come with summaries (e.g. counts of concepts per domain) if respective
