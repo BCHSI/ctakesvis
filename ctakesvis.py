@@ -263,7 +263,7 @@ def visulize_ctakes_mongo(note, concepts, note_key='na',
         fh.write(html_)
     
     if copy_package:
-        copy_static(tmdir)
+        copy_static(pjoin(tmdir, 'html'))
     
     url = path.absolute().as_uri()
     if browser:
