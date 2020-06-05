@@ -59,4 +59,3 @@ $(window).load(function(){
       tbl.download("json", filebase + ".json");
   });
 });
-

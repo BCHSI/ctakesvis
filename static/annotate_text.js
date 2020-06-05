@@ -2,6 +2,14 @@ function replaceNewline(txt){
     return txt.replace(/(?:\r\n|\r|\n)/g, '<br>\n')
 }
 
+
+function sortByKey(array, key) {
+    return array.sort(function(a, b) {
+        var x = a[key]; var y = b[key];
+        return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+    });
+}
+
 function annotateTextWithJson(txt, anns,
                               start = "start",
                               end = "end",
@@ -17,8 +25,12 @@ function annotateTextWithJson(txt, anns,
     var prev_start = 0;
     var html = "";
     var ann;
+
+    console.log("highlighting: "+ highlight);
+    anns = sortByKey(anns, start);
     console.log("annotations length " + anns.length);
     for (var ii = 0; (ii < anns.length); ii += 1) {
+        var domain = "";
         ann = anns[ii];
         // console.log("annotation " + ii);
         // console.log(ann);
@@ -33,7 +45,7 @@ function annotateTextWithJson(txt, anns,
         }
         tip_text = `<a href="#row_${ii}" class="ttt" >${tip_text}</a>`;
         if (highlight in ann) {
-            domain = ann[highlight].replace(" ", "_");
+            domain = ann[highlight]; //.replace(" ", "_");
         }
         try {
             chunk_start = Number.parseInt(ann[start]);
@@ -70,9 +82,10 @@ function annotateTextWithJson(txt, anns,
                 word = "<sup>&dagger;</sup>";
             }
         }
+
         var new_chunk = (prefix +
                         `<div class="ttooltip" id="entity_${ii}">` +
-                        `<span class=${domain}>${word}</span>` + 
+                        `<span class="${domain}">${word}</span>` + 
                         `<span class="tooltiptext" id="tooltiptext_${ii}">` +
                         `${tip_text}</span></div>`);
         html += new_chunk

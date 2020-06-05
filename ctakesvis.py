@@ -35,12 +35,18 @@ def warning_on_one_line(message, category, filename, lineno, file=None, line=Non
 warnings.formatwarning = warning_on_one_line
 
 
-def copy_static(tmdir):
+def copy_static(tmdir, source=None):
     "copy the `static` directory to the target directory"
-    ctakesvis_home = os.path.dirname(os.path.realpath(__file__))
+    if source is None:
+        source = os.path.dirname(os.path.realpath(__file__))
     try:
-        copytree(pjoin(ctakesvis_home, 'static'),
-                pjoin(tmdir,'static' ))
+        copytree(pjoin(source, 'static'),
+                pjoin(tmdir,'static'))
+        
+        os.makedirs(pjoin(tmdir,'static','tabulator','dist','css'), exist_ok=True)
+        
+        copy(pjoin(source, 'static','tabulator','dist','css','tabulator.min.css'),
+                pjoin(tmdir,'static','tabulator','dist','css'))
     except FileExistsError as ee:
         warn(f"static folder already exists in {tmdir}; skipping")
         pass
@@ -251,6 +257,8 @@ def visulize_ctakes_mongo(note, concepts, note_key='na',
                        name_mapping=name_mapping,
                        label=label,
                        start=start, end=end,
+                       colorscheme = 'colors-ctakes.css',
+                       highlight="domain",
                        )
     
     tmdir = tempfile.gettempdir()
