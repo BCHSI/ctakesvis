@@ -1,7 +1,6 @@
 import json
 import pandas as pd
 
-## Achtung: hardcoded JS and CSS locations
 HEADER = """
 <head>
   <meta charset="utf-8">
@@ -86,8 +85,6 @@ def get_head(colors=None, static='./static'):
     else:
         colorscheme=""
     head = HEADER.format(colorscheme=colorscheme, static=static)
-    print("HEAD", colors, static)
-    print(head)
     return head
 
 
