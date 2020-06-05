@@ -35,6 +35,17 @@ def warning_on_one_line(message, category, filename, lineno, file=None, line=Non
 warnings.formatwarning = warning_on_one_line
 
 
+def copy_static(tmdir):
+    "copy the `static` directory to the target directory"
+    ctakesvis_home = os.path.dirname(os.path.realpath(__file__))
+    try:
+        copytree(pjoin(ctakesvis_home, 'static'),
+                pjoin(tmdir,'static' ))
+    except FileExistsError as ee:
+        warn(f"static folder already exists in {tmdir}; skipping")
+        pass
+
+
 def _rename_domain(x):
     if x == 'signs_and_symptoms':
         x = 'symptoms'
@@ -66,6 +77,7 @@ def concat_concepts(results, start='offset_start'):
 
     concepts = sorted(concepts, key = lambda x: x[start])
     return concepts
+
 
 def add_css_head(html_, *args, colors=None):
     include = [
@@ -251,21 +263,7 @@ def visulize_ctakes_mongo(note, concepts, note_key='na',
         fh.write(html_)
     
     if copy_package:
-       ctakesvis_home = os.path.dirname(os.path.realpath(__file__))
-       try:    
-           copytree(pjoin(ctakesvis_home, 'tabulator'),
-                    pjoin(tmdir,'tabulator' ))
-       except FileExistsError as ee:
-           pass
-        
-       for ff in os.scandir(str(ctakesvis_home)):
-           if ff.name.endswith('.css') or ff.name.endswith('.js'):
-               try:
-                   # if not os.path.exists()
-                   copy(ff.path, pjoin(tmdir))
-                   print(ff.name)
-               except FileExistsError as ee:
-                   print(ee)
+        copy_static(tmdir)
     
     url = path.absolute().as_uri()
     if browser:
@@ -383,6 +381,8 @@ if __name__ == '__main__':
         summary_['name'] = input_data['id']
         summary.append(summary_)
 
+    # copy the static directory
+    copy_static(tmdir)
 
     # write summary / index page
     if os.path.isdir(args.report) and len(summary)>0:
