@@ -5,16 +5,16 @@ import pandas as pd
 HEADER = """
 <head>
   <meta charset="utf-8">
-  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../static/styles.css">
   {colorscheme}
-  <link href="../tabulator/dist/css/tabulator.min.css" rel="stylesheet">
+  <link href="../static/tabulator/dist/css/tabulator.min.css" rel="stylesheet">
   
-  <script src="../jquery.min.js"></script>
-  <script src="../scripts.js" type="text/javascript"></script>
+  <script src="../static/jquery.min.js"></script>
+  <script src="../static/scripts.js" type="text/javascript"></script>
 
-  <script type="text/javascript" src="../tabulator/dist/js/tabulator.min.js"></script>
-  <script type="text/javascript" src="../annotate_text.js"></script>
-  <script type="text/javascript" src="../table_schema.js"></script>
+  <script type="text/javascript" src="../static/tabulator/dist/js/tabulator.min.js"></script>
+  <script type="text/javascript" src="../static/annotate_text.js"></script>
+  <script type="text/javascript" src="../static/table_schema.js"></script>
 </head>
 """
 
