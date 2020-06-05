@@ -295,8 +295,12 @@ if __name__ == '__main__':
                         dest='browser')
     args = parser.parse_args()
 
-    parent = os.getcwd()
-    html_dir = os.path.join(parent, args.html)
+    parent = os.path.dirname(args.html.rstrip('/').rstrip('\\'))
+    if os.path.isdir(parent):
+        html_dir = args.html
+    else:
+        parent = os.getcwd()
+        html_dir = os.path.join(parent, args.html)
     os.makedirs(html_dir, exist_ok=True)
 
     if os.path.isdir(args.report):
@@ -353,9 +357,10 @@ if __name__ == '__main__':
             continue
 
         html_ = vis_report(input_data['text'], input_data['concepts'],
-                                     input_data['col_order'], 
-                                     name_mapping=name_mapping,
-                                     **args.__dict__)
+                           input_data['col_order'], 
+                           name_mapping=name_mapping,
+                           static='./static',
+                           **args.__dict__)
 
         path = os.path.join(html_dir, input_data['id'] + '.html')
         path = Path(path)
@@ -382,7 +387,7 @@ if __name__ == '__main__':
         summary.append(summary_)
 
     # copy the static directory
-    copy_static(tmdir)
+    copy_static(html_dir)
 
     # write summary / index page
     if os.path.isdir(args.report) and len(summary)>0:

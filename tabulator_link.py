@@ -5,16 +5,16 @@ import pandas as pd
 HEADER = """
 <head>
   <meta charset="utf-8">
-  <link rel="stylesheet" href="../static/styles.css">
+  <link rel="stylesheet" href="{static}/styles.css">
   {colorscheme}
-  <link href="../static/tabulator/dist/css/tabulator.min.css" rel="stylesheet">
+  <link href="{static}/tabulator/dist/css/tabulator.min.css" rel="stylesheet">
   
-  <script src="../static/jquery.min.js"></script>
-  <script src="../static/scripts.js" type="text/javascript"></script>
+  <script type="text/javascript" src="{static}/jquery.min.js"></script>
+  <script type="text/javascript" src="{static}/scripts.js" ></script>
 
-  <script type="text/javascript" src="../static/tabulator/dist/js/tabulator.min.js"></script>
-  <script type="text/javascript" src="../static/annotate_text.js"></script>
-  <script type="text/javascript" src="../static/table_schema.js"></script>
+  <script type="text/javascript" src="{static}/tabulator/dist/js/tabulator.min.js"></script>
+  <script type="text/javascript" src="{static}/annotate_text.js"></script>
+  <script type="text/javascript" src="{static}/table_schema.js"></script>
 </head>
 """
 
@@ -80,12 +80,16 @@ def get_col_types_for_js(concept_dict_list):
     )
 
 
-def get_head(colors=None):
+def get_head(colors=None, static='./static'):
     if colors is not None:
-        colorscheme = f'<link rel="stylesheet" href="../{colors}">'
+        colorscheme = f'<link rel="stylesheet" href="{static}/{colors}">'
     else:
         colorscheme=""
-    return HEADER.format(colorscheme=colorscheme)
+    head = HEADER.format(colorscheme=colorscheme, static=static)
+    print("HEAD", colors, static)
+    print(head)
+    return head
+
 
 def get_schema(concepts, col_order, **kwargs):
     # {title:"Name", field:"name", sorter:"string", width:150, hozAlign:"left", formatter:"progress", sortable:false},
@@ -103,17 +107,6 @@ def get_schema(concepts, col_order, **kwargs):
     return col_list
 
 
-def vis_report(text, concepts, col_order = [], name_mapping = {},
-               start='start', end='end', label='label', highlight='domain',
-               colorscheme='colors-ctakes.css', **kwargs):
-    """
-    """
-
-    tag = "concept-table"
-
-    return html_
-
-
 def vis_report(text, concepts, 
                  col_order = [], name_mapping = {}, 
                  start="start",
@@ -128,9 +121,10 @@ def vis_report(text, concepts,
                  href='id',
                  first_col_width="20%",
                  colorscheme = None,
+                 static='./static',
                  **kwargs):
     "generate javascript table data and code"
-    head = get_head(colorscheme)
+    head = get_head(colorscheme, static=static)
     schema = get_schema(concepts=concepts, col_order=col_order)
     schema = json.dumps(schema).replace('}, ', '},\n    ')
 
@@ -173,9 +167,11 @@ def get_table_js(concepts, col_order = [], name_mapping = {},
                  tag = 'concept-table', highlight=None, 
                  vertical=True, layout="fitColumns", 
                  height='100%', href='id',
-                 first_col_width="20%", **kwargs):
+                 first_col_width="20%",
+                 static='./static', 
+                 **kwargs):
     "generate javascript table data and code"
-    head = get_head()
+    head = get_head(static=static)
     schema = get_schema(concepts=concepts, col_order=col_order)
     schema = json.dumps(schema).replace('}, ', '},\n    ')
     return head + boilerplate_index.format(
