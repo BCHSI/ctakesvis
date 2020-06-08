@@ -85,31 +85,6 @@ def concat_concepts(results, start='offset_start'):
     return concepts
 
 
-def add_css_head(html_, *args, colors=None):
-    include = [
-    '<meta charset="utf-8"/>',
-    '<link rel="stylesheet" href="../styles.css">',
-    #'<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>',
-    '<script src="../jquery.min.js"></script>',
-    '<script src="../scripts.js" type="text/javascript"></script>',
-    ]
-
-    include.extend(args)
-
-    if colors:
-        include.append(
-        f'<link rel="stylesheet" href="../{colors}">'
-        )
-    include = '\n'.join(include)
-    out = (f'''<head>
-</head>
-{include}
-<body>
-{html_}
-</body>''')
-    return out
-
-
 def modify_column_names(x,
                         columns={'hof': 'hx'}):
     """clean and substitute column names
@@ -232,8 +207,6 @@ def generate_summary(dirname, summary, fname='name',
     table_html = f'''<div id="{tag}"></div>
     '''
     html_ = '<h1>Annotated files:</h1>' + table_html + concept_table_js
-
-    html_ =  add_css_head(html_, colors=None)
     return html_
 
 
