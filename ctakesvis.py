@@ -301,6 +301,8 @@ if __name__ == '__main__':
                         dest='ctakes')
     parser.add_argument('--no-browser', action="store_false", default=True,
                         dest='browser')
+    parser.add_argument('--no-copy', action="store_false", default=True,
+                        dest='copy')
     args = parser.parse_args()
 
     parent = os.path.dirname(args.html.rstrip('/').rstrip('\\'))
@@ -395,7 +397,8 @@ if __name__ == '__main__':
         summary.append(summary_)
 
     # copy the static directory
-    copy_static(html_dir)
+    if args.copy:
+        copy_static(html_dir)
 
     # write summary / index page
     if os.path.isdir(args.report) and len(summary)>0:
