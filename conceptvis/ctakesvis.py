@@ -7,13 +7,13 @@ import re
 import pandas as pd
 from warnings import warn
 import warnings
-from tabulator_link import get_table_js, vis_report 
 import tempfile
 from shutil import copyfile, copy, copytree
 from os.path import join as pjoin
 import os
 import webbrowser
 from pathlib import Path
+from .tabulator_link import get_table_js, vis_report 
 
 COL_ORDER_CTAKES = ['canon_text',
              'negated',
