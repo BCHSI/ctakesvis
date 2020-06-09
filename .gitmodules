@@ -1,5 +1,5 @@
 [submodule "tabulator"]
-	path = static/tabulator
+	path = conceptvis/static/tabulator
 	url = https://github.com/olifolkerd/tabulator
 [submodule "public-notes"]
 	path = public-notes
