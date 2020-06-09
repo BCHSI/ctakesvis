@@ -15,8 +15,10 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     install_requires=['pandas'],
     package_data = {'conceptvis':
-                    ['static/*.css', 'static/*.js', 'static/tabulator/dist/js/tabulator.min.js']
-                    },
+                    ['static/*.css', 'static/*.js',
+                    'static/tabulator/dist/js/tabulator.min.js',
+                    'static/tabulator/dist/css/tabulator.min.css',
+                    ]},
     #packages=setuptools.find_packages(),
     # url="https://github.com/pypa/sampleproject",
     classifiers=[
