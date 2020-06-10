@@ -42,15 +42,18 @@ def copy_static(tmdir, source=None):
     try:
         copytree(pjoin(source, 'static'),
                 pjoin(tmdir,'static'))
-        
-        os.makedirs(pjoin(tmdir,'static','tabulator','dist','css'), exist_ok=True)
-        
-        copy(pjoin(source, 'static','tabulator','dist','css','tabulator.min.css'),
-                pjoin(tmdir,'static','tabulator','dist','css'))
     except FileExistsError as ee:
         warn(f"static folder already exists in {tmdir}; skipping")
         pass
 
+    try:
+        os.makedirs(pjoin(tmdir,'static','tabulator','dist','css'),
+                    exist_ok=True)
+        copy(pjoin(source, 'static','tabulator','dist','css','tabulator.min.css'),
+             pjoin(tmdir,'static','tabulator','dist','css'))
+    except FileExistsError as ee:
+        warn(f"static folder already exists in {tmdir}; skipping")
+        pass
 
 def _rename_domain(x):
     if x == 'signs_and_symptoms':
