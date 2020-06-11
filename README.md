@@ -10,7 +10,12 @@ To generate a visualization, run:
 
 # Demo
 
-![](demo-small.gif)
+## Screenshot
+![screenshot](docs/screenshot.png)
+
+## Animation
+
+![animation](docs/demo-small.gif)
 
 # Generating summaries
 
