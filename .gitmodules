@@ -1,6 +1,3 @@
 [submodule "tabulator"]
 	path = static/tabulator
 	url = https://github.com/olifolkerd/tabulator
-[submodule "public-notes"]
-	path = public-notes
-	url = https://github.com/BCHSI/public-notes
