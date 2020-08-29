@@ -19,7 +19,7 @@ import webbrowser
 from pathlib import Path
 try:
     from .tabulator_link import get_table_js, vis_report
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
     from tabulator_link import get_table_js, vis_report
     
 
