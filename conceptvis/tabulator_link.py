@@ -129,6 +129,7 @@ def vis_report(text, concepts,
       <div class="table-controls">
       <button id="download-csv">Download CSV</button>
       <button id="download-json">Download JSON</button>
+      <input type="button" onclick="location.href='index.html';" value="Index &#x21A9;" />
       <!--
       <button id="download-xlsx">Download XLSX</button>
       <button id="download-pdf">Download PDF</button>
