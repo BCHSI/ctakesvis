@@ -7,13 +7,21 @@ import re
 import pandas as pd
 from warnings import warn
 import warnings
+import logging
+logging.basicConfig()
+logging.getLogger().setLevel(logging.DEBUG)
+
 import tempfile
 from shutil import copyfile, copy, copytree
 from os.path import join as pjoin
 import os
 import webbrowser
 from pathlib import Path
-from .tabulator_link import get_table_js, vis_report 
+try:
+    from .tabulator_link import get_table_js, vis_report
+except ModuleNotFoundError:
+    from tabulator_link import get_table_js, vis_report
+    
 
 COL_ORDER_CTAKES = ['canon_text',
              'negated',
@@ -41,7 +49,7 @@ def copy_static(tmdir, source=None):
         source = os.path.dirname(os.path.realpath(__file__))
     try:
         copytree(pjoin(source, 'static'),
-                pjoin(tmdir,'static'))
+                 pjoin(tmdir,'static'))
     except FileExistsError as ee:
         warn(f"static folder already exists in {tmdir}; skipping")
         pass
@@ -273,6 +281,7 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--summarize_by',    help='', default=None) #'label')
     parser.add_argument('-f', '--summarize_field', help='', default=None) #'match')
     parser.add_argument('-a', '--agg',   help='', default='last')
+    parser.add_argument('--input-suffix',   help='', default='.txt')
     parser.add_argument('--no-ctakes', action="store_false", default=True,
                         dest='ctakes')
     parser.add_argument('--no-browser', action="store_false", default=True,
@@ -290,7 +299,7 @@ if __name__ == '__main__':
     os.makedirs(html_dir, exist_ok=True)
 
     if os.path.isdir(args.report):
-        print('`report` argument is a directory')
+        logging.info(f'`report` argument is a directory:\n{args.report}')
         reports = os.scandir(args.report)
     elif args.report.lower() in ('na', 'none', '.'):
         reports = []
@@ -321,8 +330,9 @@ if __name__ == '__main__':
             fp_report = report.path
         else:
             fp_report = report
-
-        if not fp_report.endswith('.txt'):
+        
+        if not len(args.input_suffix)>0 and \
+            fp_report.endswith(args.input_suffix):
             continue
 
         # catch file errors and return as warnings
@@ -351,7 +361,7 @@ if __name__ == '__main__':
         path = os.path.join(html_dir, input_data['id'] + '.html')
         path = Path(path)
 
-        print(f'saving to:\t{path}')
+        logging.info(f'saving to:\t{path}')
         with open(path, 'w') as fh:
             fh.write(html_)
 
@@ -372,6 +382,7 @@ if __name__ == '__main__':
         summary_['name'] = input_data['id']
         summary.append(summary_)
 
+    logging.info(f"processed {len(summary)} notes")
     # copy the static directory
     if args.copy:
         copy_static(html_dir)
@@ -384,8 +395,7 @@ if __name__ == '__main__':
         with open(path, 'w') as fh:
             fh.write(html_)
 
-    if args.browser:
-        
-        url = path.absolute().as_uri()
-        webbrowser.open(url)
+        if args.browser:
+            url = path.absolute().as_uri()
+            webbrowser.open(url)
 
