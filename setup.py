@@ -19,6 +19,9 @@ setuptools.setup(
                     'static/tabulator/dist/js/tabulator.min.js',
                     'static/tabulator/dist/css/tabulator.min.css',
                     ]},
+
+    entry_points={
+        'console_scripts': ["ctakesvis = conceptvis.ctakesvis:main"]},
     #packages=setuptools.find_packages(),
     # url="https://github.com/pypa/sampleproject",
     classifiers=[

@@ -108,7 +108,8 @@ def modify_column_names(x,
         return x.replace('_', ' ')
 
 
-def read_extract(fn_json, col_order = []):
+def read_extract(fn_json, col_order = [], 
+                 start="start", end="end"):
     if fn_json.endswith('.json'):
         # UCSF CTAKES JSON
         with open(fn_json) as fh:
@@ -124,16 +125,18 @@ def read_extract(fn_json, col_order = []):
         # Brain database
         concepts = pd.read_csv(fn_json)
         col_order = list(concepts.columns) 
-        col_order.remove(args.start)
-        col_order.remove(args.end)
+        col_order.remove(start)
+        col_order.remove(end)
         concepts = concepts.to_dict(orient='records')
 
     if isinstance(concepts, (list, tuple)):
-        concepts = sorted(concepts, key = lambda x: x[args.start])
+        concepts = sorted(concepts, key = lambda x: x[start])
     return concepts, col_order
 
 
-def read_ucsf_ctakes(fn_report, extract, col_order=[], suffix='.json'):
+def read_ucsf_ctakes(fn_report, extract, 
+                     col_order=[], suffix='.json',
+                     start="start", end="end"):
     """
     INPUT:
     - fn_report -- report file name
@@ -160,7 +163,9 @@ def read_ucsf_ctakes(fn_report, extract, col_order=[], suffix='.json'):
         print(f'missing:\t{fn_json}', )
         raise FileNotFoundError(f'missing:\t{fn_json}')
 
-    concepts, col_order = read_extract(fn_json, col_order=col_order)
+    concepts, col_order = read_extract(fn_json,
+            col_order=col_order,
+            start=start, end=end)
     return {'text': txt, 'concepts': concepts, 'col_order': col_order, 'id':id}
 
 
@@ -263,7 +268,7 @@ def visulize_ctakes_mongo(note, concepts, note_key='na',
     return url
 
 
-if __name__ == '__main__':
+def main():
     from pathlib import Path
     import argparse
     import os
@@ -271,7 +276,8 @@ if __name__ == '__main__':
     parser.add_argument('report', help='report text file path', type=str)
     parser.add_argument('extract', help='file path of the JSON-formatted CTAKES extract or folder that contains it', 
                         type=str)
-    parser.add_argument('--html', help='folder to store an html file', default='html')
+    parser.add_argument('--html', help='folder to store an html file',
+                        default = os.path.join(os.getcwd(), 'html'))
     parser.add_argument('-c', '--highlight', help='column name to be highlighted in color', default='domain')
     parser.add_argument('--colorscheme', help='CSS for color scheme', default='colors-ctakes.css')
     parser.add_argument('-l', '--label', help='column name for label', default='canon_text')
@@ -338,7 +344,9 @@ if __name__ == '__main__':
         # catch file errors and return as warnings
         try:
             input_data = read_ucsf_ctakes(fp_report, args.extract,
-                             col_order=col_order, suffix=args.suffix)
+                     col_order=col_order,
+                     suffix=args.suffix,
+                     start=args.start, end=args.end)
             # input_data is a dictionary with keys:
             # - text
             # - concepts
@@ -399,3 +407,5 @@ if __name__ == '__main__':
             url = path.absolute().as_uri()
             webbrowser.open(url)
 
+if __name__ == '__main__':
+    main()
