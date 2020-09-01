@@ -160,7 +160,7 @@ def read_ucsf_ctakes(fn_report, extract,
 
     #warn(f'JSON:\t{fn_json}')
     if not os.path.exists(fn_json):
-        print(f'missing:\t{fn_json}', )
+        logging.warn(f'missing:\t{fn_json}', )
         raise FileNotFoundError(f'missing:\t{fn_json}')
 
     concepts, col_order = read_extract(fn_json,
@@ -196,7 +196,6 @@ def generate_index(dirname):
 
 def generate_summary(dirname, summary, fname='name',
                      tag = "contents-table"):
-    print(summary)
     cols = set()
     for su in summary:
         cols = cols | su.keys()
@@ -305,7 +304,7 @@ def main():
     os.makedirs(html_dir, exist_ok=True)
 
     if os.path.isdir(args.report):
-        logging.info(f'`report` argument is a directory:\n{args.report}')
+        logging.warning(f'`report` argument is a directory:\n{args.report}')
         reports = os.scandir(args.report)
     elif args.report.lower() in ('na', 'none', '.'):
         reports = []
@@ -330,8 +329,12 @@ def main():
         col_order = []
         name_mapping = {}
 
+    by = args.summarize_by
+    if by is None:
+        by = lambda x: True
+
     summary = []
-    for report in reports:
+    for nn, report in enumerate(reports):
         if hasattr(report, 'path'):
             fp_report = report.path
         else:
@@ -369,7 +372,7 @@ def main():
         path = os.path.join(html_dir, input_data['id'] + '.html')
         path = Path(path)
 
-        logging.info(f'saving to:\t{path}')
+        logging.info(f'\t{nn}\tsaving to:\t{path}')
         with open(path, 'w') as fh:
             fh.write(html_)
 
@@ -377,13 +380,9 @@ def main():
         if args.summarize_field is not None:
             concepts = pd.DataFrame(input_data['concepts'])
 
-            by = args.summarize_by
-            if by is None:
-                by = lambda x: True
             summary_ = (concepts
                         .groupby(by)[args.summarize_field]
                         .agg(args.agg))
-            print(summary_)
             summary_ = summary_.to_dict()
         else:
             summary_ = {}
