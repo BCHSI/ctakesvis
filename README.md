@@ -8,6 +8,13 @@ To generate a visualization, run:
 
     python ctakesvis.py [plain text note] [directory of ctakes extract]
 
+# Installation
+
+    git clone https://github.com/BCHSI/ctakesvis
+    cd ctakesvis 
+    pip install -U .
+
+
 # Demo
 
 ## Screenshot
