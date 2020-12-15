@@ -16,7 +16,9 @@ function annotateTextWithJson(txt, anns,
                               label = "label",
                               loc = "location",
                               highlight = "domain",
-                              negation_symbol="&#10060;") {
+                              negation_symbol="&#10060;",
+                              text="range_text"
+                              ) {
     var domain, prefix,
     chunk_start, chunk_end, 
     tip_text, txt_span, word;
@@ -61,9 +63,14 @@ function annotateTextWithJson(txt, anns,
         if (chunk_start > prev_end) {
             //try {
                 txt_span = replaceNewline(txt.slice(prev_end, chunk_start));
+
                 html += "<span>" + txt_span + "</span>";
                 prefix = "";
                 word = txt.slice(chunk_start, chunk_end);
+
+                if ((text) && (word != ann[text])){
+                    console.log(`mismatch:\n selected\t"${word}" (${chunk_start} -- ${chunk_end}),\n while the ground truth is "${ann[text]}"` );
+                    }
             /*
             } catch(ee) {
                 if ((ee instanceof TypeError)) {

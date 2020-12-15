@@ -19,7 +19,7 @@ import webbrowser
 from pathlib import Path
 try:
     from .tabulator_link import get_table_js, vis_report
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
     from tabulator_link import get_table_js, vis_report
     
 
@@ -114,12 +114,25 @@ def read_extract(fn_json, col_order = []):
         with open(fn_json) as fh:
             concepts = json.load(fh)
 
-        concepts = concat_concepts(concepts)
-        concepts = [rename_domain_inplace(concept) for concept
-                    in concepts]
+        if 'domains' in concepts:
+            concepts = concat_concepts(concepts)
+            concepts = [rename_domain_inplace(concept) for concept
+                        in concepts]
+        
+        keys = set(concepts[0].keys())
+        cols = list(keys)
+        for conc in concepts:
+            cols_ = conc.keys()
+            if len(keys - cols_)>0:
+                cols.extend(list(keys - cols_))
+                keys |= cols_
 
         if len(col_order)==0:
-            col_order = concepts[0].keys()
+            col_order = cols
+        elif len(set(col_order) - set(cols)) > 0:
+            col_order = [cc for cc in col_order if cc in cols]
+
+
     elif fn_json.endswith('.csv'):
         # Brain database
         concepts = pd.read_csv(fn_json)
@@ -131,6 +144,13 @@ def read_extract(fn_json, col_order = []):
     if isinstance(concepts, (list, tuple)):
         concepts = sorted(concepts, key = lambda x: x[args.start])
     return concepts, col_order
+
+def read_spacy(fn_report, lines=True):
+    data = pd.read_json(fn_report, lines=True)
+    return {"text": data["text"],
+            "concepts": data["spans"],
+            "id": data["id"]
+            }
 
 
 def read_ucsf_ctakes(fn_report, extract, col_order=[], suffix='.json'):
@@ -161,6 +181,7 @@ def read_ucsf_ctakes(fn_report, extract, col_order=[], suffix='.json'):
         raise FileNotFoundError(f'missing:\t{fn_json}')
 
     concepts, col_order = read_extract(fn_json, col_order=col_order)
+    print("col_order", col_order)
     return {'text': txt, 'concepts': concepts, 'col_order': col_order, 'id':id}
 
 
@@ -226,6 +247,7 @@ def visulize_ctakes_mongo(note, concepts, note_key='na',
                           copy_package=True,
                           label='canon_text',
                           start='offset_start',
+                          colorscheme='colors-ctakes.css',
                           end='offset_end'):
     
     for item in concepts:
@@ -241,7 +263,7 @@ def visulize_ctakes_mongo(note, concepts, note_key='na',
                        name_mapping=name_mapping,
                        label=label,
                        start=start, end=end,
-                       colorscheme = 'colors-ctakes.css',
+                       colorscheme = colorscheme,
                        highlight="domain",
                        )
     

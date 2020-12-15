@@ -21,7 +21,7 @@ boilerplate_data = """
   <script type="text/javascript">
 
     var tabledata = {tabledata};
-    var txt = `{text}`;
+    var txt = {text};
     var highlight = {highlight};
 
     var html1 = annotateTextWithJson(txt, tabledata,
@@ -88,7 +88,7 @@ def get_head(colors=None, static='./static'):
     return head
 
 
-def get_schema(concepts, col_order, **kwargs):
+def get_schema(concepts, col_order, start=None, end=None, **kwargs):
     # {title:"Name", field:"name", sorter:"string", width:150, hozAlign:"left", formatter:"progress", sortable:false},
     col_types = get_col_types_for_js(concepts)
     col_list = []
@@ -96,6 +96,8 @@ def get_schema(concepts, col_order, **kwargs):
         col_order = col_types.keys()
 
     for cc in col_order:
+        if cc==start or cc==end:
+            continue
         col_list.append({
             "title":  cc.replace('_', ' '),
             "field":  cc,
@@ -122,8 +124,16 @@ def vis_report(text, concepts,
                  **kwargs):
     "generate javascript table data and code"
     head = get_head(colorscheme, static=static)
-    schema = get_schema(concepts=concepts, col_order=col_order)
+    schema = get_schema(concepts=concepts, col_order=col_order, start=start, end=end)
     schema = json.dumps(schema).replace('}, ', '},\n    ')
+    # try:
+    #     col_order.remove(start)
+    # except:
+    #     pass
+    # try:
+    #     col_order.remove(end)
+    # except:
+    #     pass
 
     concept_table_html = f'''<div id="{tag}"></div>
       <div class="table-controls">
@@ -138,7 +148,7 @@ def vis_report(text, concepts,
     '''
 
     main_dish = boilerplate_data.format(
-                        text = text,
+                        text = json.dumps(text),
                         tabledata=json.dumps(concepts),
                         start = start,
                         end = end,
@@ -166,11 +176,12 @@ def get_table_js(concepts, col_order = [], name_mapping = {},
                  vertical=True, layout="fitColumns", 
                  height='100%', href='id',
                  first_col_width="20%",
-                 static='./static', 
+                 static='./static',
+                 start=None, end=None,
                  **kwargs):
     "generate javascript table data and code"
     head = get_head(static=static)
-    schema = get_schema(concepts=concepts, col_order=col_order)
+    schema = get_schema(concepts=concepts, col_order=col_order, start=None, end=None)
     schema = json.dumps(schema).replace('}, ', '},\n    ')
     return head + boilerplate_index.format(
                         tag = tag,
