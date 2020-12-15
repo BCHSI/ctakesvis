@@ -108,7 +108,8 @@ def modify_column_names(x,
         return x.replace('_', ' ')
 
 
-def read_extract(fn_json, col_order = []):
+def read_extract(fn_json, col_order = [], 
+                 start="start", end="end"):
     if fn_json.endswith('.json'):
         # UCSF CTAKES JSON
         with open(fn_json) as fh:
@@ -137,12 +138,12 @@ def read_extract(fn_json, col_order = []):
         # Brain database
         concepts = pd.read_csv(fn_json)
         col_order = list(concepts.columns) 
-        col_order.remove(args.start)
-        col_order.remove(args.end)
+        col_order.remove(start)
+        col_order.remove(end)
         concepts = concepts.to_dict(orient='records')
 
     if isinstance(concepts, (list, tuple)):
-        concepts = sorted(concepts, key = lambda x: x[args.start])
+        concepts = sorted(concepts, key = lambda x: x[start])
     return concepts, col_order
 
 def read_spacy(fn_report, lines=True):
@@ -153,7 +154,9 @@ def read_spacy(fn_report, lines=True):
             }
 
 
-def read_ucsf_ctakes(fn_report, extract, col_order=[], suffix='.json'):
+def read_ucsf_ctakes(fn_report, extract, 
+                     col_order=[], suffix='.json',
+                     start="start", end="end"):
     """
     INPUT:
     - fn_report -- report file name
@@ -177,11 +180,12 @@ def read_ucsf_ctakes(fn_report, extract, col_order=[], suffix='.json'):
 
     #warn(f'JSON:\t{fn_json}')
     if not os.path.exists(fn_json):
-        print(f'missing:\t{fn_json}', )
+        logging.warn(f'missing:\t{fn_json}', )
         raise FileNotFoundError(f'missing:\t{fn_json}')
 
-    concepts, col_order = read_extract(fn_json, col_order=col_order)
-    print("col_order", col_order)
+    concepts, col_order = read_extract(fn_json,
+            col_order=col_order,
+            start=start, end=end)
     return {'text': txt, 'concepts': concepts, 'col_order': col_order, 'id':id}
 
 
@@ -212,7 +216,6 @@ def generate_index(dirname):
 
 def generate_summary(dirname, summary, fname='name',
                      tag = "contents-table"):
-    print(summary)
     cols = set()
     for su in summary:
         cols = cols | su.keys()
@@ -285,7 +288,7 @@ def visulize_ctakes_mongo(note, concepts, note_key='na',
     return url
 
 
-if __name__ == '__main__':
+def main():
     from pathlib import Path
     import argparse
     import os
@@ -293,7 +296,8 @@ if __name__ == '__main__':
     parser.add_argument('report', help='report text file path', type=str)
     parser.add_argument('extract', help='file path of the JSON-formatted CTAKES extract or folder that contains it', 
                         type=str)
-    parser.add_argument('--html', help='folder to store an html file', default='html')
+    parser.add_argument('--html', help='folder to store an html file',
+                        default = os.path.join(os.getcwd(), 'html'))
     parser.add_argument('-c', '--highlight', help='column name to be highlighted in color', default='domain')
     parser.add_argument('--colorscheme', help='CSS for color scheme', default='colors-ctakes.css')
     parser.add_argument('-l', '--label', help='column name for label', default='canon_text')
@@ -321,7 +325,7 @@ if __name__ == '__main__':
     os.makedirs(html_dir, exist_ok=True)
 
     if os.path.isdir(args.report):
-        logging.info(f'`report` argument is a directory:\n{args.report}')
+        logging.warning(f'`report` argument is a directory:\n{args.report}')
         reports = os.scandir(args.report)
     elif args.report.lower() in ('na', 'none', '.'):
         reports = []
@@ -346,8 +350,12 @@ if __name__ == '__main__':
         col_order = []
         name_mapping = {}
 
+    by = args.summarize_by
+    if by is None:
+        by = lambda x: True
+
     summary = []
-    for report in reports:
+    for nn, report in enumerate(reports):
         if hasattr(report, 'path'):
             fp_report = report.path
         else:
@@ -360,7 +368,9 @@ if __name__ == '__main__':
         # catch file errors and return as warnings
         try:
             input_data = read_ucsf_ctakes(fp_report, args.extract,
-                             col_order=col_order, suffix=args.suffix)
+                     col_order=col_order,
+                     suffix=args.suffix,
+                     start=args.start, end=args.end)
             # input_data is a dictionary with keys:
             # - text
             # - concepts
@@ -383,7 +393,7 @@ if __name__ == '__main__':
         path = os.path.join(html_dir, input_data['id'] + '.html')
         path = Path(path)
 
-        logging.info(f'saving to:\t{path}')
+        logging.info(f'\t{nn}\tsaving to:\t{path}')
         with open(path, 'w') as fh:
             fh.write(html_)
 
@@ -391,13 +401,9 @@ if __name__ == '__main__':
         if args.summarize_field is not None:
             concepts = pd.DataFrame(input_data['concepts'])
 
-            by = args.summarize_by
-            if by is None:
-                by = lambda x: True
             summary_ = (concepts
                         .groupby(by)[args.summarize_field]
                         .agg(args.agg))
-            print(summary_)
             summary_ = summary_.to_dict()
         else:
             summary_ = {}
@@ -421,3 +427,5 @@ if __name__ == '__main__':
             url = path.absolute().as_uri()
             webbrowser.open(url)
 
+if __name__ == '__main__':
+    main()
