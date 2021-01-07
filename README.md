@@ -9,8 +9,9 @@ To generate a visualization, run:
     python ctakesvis.py [plain text note] [directory of ctakes extract]
 
 # Installation
+⚠️ Important: use the `--recursive` flag to make sure the tabulator javascript package is downloaded
 
-    git clone https://github.com/BCHSI/ctakesvis
+    git clone --recursive https://github.com/BCHSI/ctakesvis
     cd ctakesvis 
     pip install -U .
 
