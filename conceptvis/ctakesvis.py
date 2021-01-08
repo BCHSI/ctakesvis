@@ -8,8 +8,6 @@ import pandas as pd
 from warnings import warn
 import warnings
 import logging
-logging.basicConfig()
-logging.getLogger().setLevel(logging.DEBUG)
 
 import tempfile
 from shutil import copyfile, copy, copytree
@@ -51,7 +49,7 @@ def copy_static(tmdir, source=None):
         copytree(pjoin(source, 'static'),
                  pjoin(tmdir,'static'))
     except FileExistsError as ee:
-        warn(f"static folder already exists in {tmdir}; skipping")
+        logging.warning(f"static folder already exists in {tmdir}; skipping")
         pass
 
     try:
@@ -60,7 +58,7 @@ def copy_static(tmdir, source=None):
         copy(pjoin(source, 'static','tabulator','dist','css','tabulator.min.css'),
              pjoin(tmdir,'static','tabulator','dist','css'))
     except FileExistsError as ee:
-        warn(f"static folder already exists in {tmdir}; skipping")
+        logging.warning(f"static folder already exists in {tmdir}; skipping")
         pass
 
 def _rename_domain(x):
@@ -307,6 +305,9 @@ def main():
     parser.add_argument('-b', '--summarize_by',    help='', default=None) #'label')
     parser.add_argument('-f', '--summarize_field', help='', default=None) #'match')
     parser.add_argument('-a', '--agg',   help='', default='last')
+    parser.add_argument('--verbosity',   help='logging verbosity, (default: %(default)s)', 
+                        choices=["debug", "info", "warning"], default='info')
+    parser.add_argument('--logfile',   help='logging verbosity, (default: None)', default=None)
     parser.add_argument('--input-suffix',   help='', default='.txt')
     parser.add_argument('--no-ctakes', action="store_false", default=True,
                         dest='ctakes')
@@ -315,6 +316,10 @@ def main():
     parser.add_argument('--no-copy', action="store_false", default=True,
                         dest='copy')
     args = parser.parse_args()
+
+    logging.basicConfig(filename=args.logfile, level= getattr(logging, args.verbosity.upper()))
+    # logging.basicConfig()
+    # logging.getLogger().setLevel(logging.DEBUG)
 
     parent = os.path.dirname(args.html.rstrip('/').rstrip('\\'))
     if os.path.isdir(parent):
@@ -325,7 +330,7 @@ def main():
     os.makedirs(html_dir, exist_ok=True)
 
     if os.path.isdir(args.report):
-        logging.warning(f'`report` argument is a directory:\n{args.report}')
+        logging.debug(f'`report` argument is a directory:\n{args.report}')
         reports = os.scandir(args.report)
     elif args.report.lower() in ('na', 'none', '.'):
         reports = []
